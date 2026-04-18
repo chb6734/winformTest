@@ -1,0 +1,62 @@
+<Window x:Class="E2ETest.Dashboard.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="E2E Test Dashboard" Height="720" Width="1200"
+        Background="#1E1E1E" Foreground="#EEE" FontFamily="Segoe UI">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="200"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#252526" Padding="12">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🧪 " FontSize="18" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TestName}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,24,0"/>
+                <TextBlock Text="{Binding ProgressText}" FontSize="13" VerticalAlignment="Center" Foreground="#9CDCFE"/>
+                <TextBlock Text="{Binding StatusText}" FontSize="13" VerticalAlignment="Center" Foreground="{Binding StatusColor}" Margin="24,0,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="0" Background="#252526" BorderBrush="#333" BorderThickness="0,0,1,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Steps}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="10,6" BorderBrush="#333" BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Icon}" FontSize="13" VerticalAlignment="Top" Margin="0,0,8,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Title}" FontSize="12" Foreground="{Binding ColorBrush}"/>
+                                        <TextBlock Text="{Binding Subtitle}" FontSize="10" Foreground="#888"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="1" Background="#000" Padding="8">
+            <Image Source="{Binding ScreenshotImage}" Stretch="Uniform"/>
+        </Border>
+
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Background="#1E1E1E" BorderBrush="#333" BorderThickness="0,1,0,0">
+            <ScrollViewer x:Name="LogScroller" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Logs}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="11" Foreground="#CCC" Padding="10,1"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>

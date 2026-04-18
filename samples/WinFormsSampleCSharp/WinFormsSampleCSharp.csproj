@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>SampleWinForms</AssemblyName>
+    <RootNamespace>SampleWinForms</RootNamespace>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

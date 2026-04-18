@@ -1,0 +1,35 @@
+# Build outputs
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Rider / VS Code
+.idea/
+.vscode/
+*.swp
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Claude / harness workspace
+_workspace/
+_workspace_prev/
+.claude/settings.local.json
+
+# Runtime output
+out/
+TestResults/
+*.trx
+
+# NuGet
+*.nupkg
+packages/
+
+# FFmpeg binary (users supply)
+tools/ffmpeg.exe
+
+# Logs
+*.log

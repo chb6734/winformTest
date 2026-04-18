@@ -1,0 +1,26 @@
+name: WinForms 로그인 성공 시나리오
+app:
+  path: ../WinFormsSampleCSharp/bin/Debug/net8.0-windows/SampleWinForms.exe
+  startupTimeoutMs: 10000
+options:
+  defaultTimeoutMs: 8000
+  recordVideo: true
+  outputDirectory: ../../out
+steps:
+  - action: screenshot
+    name: initial_state
+  - action: fill
+    target: "#txtUser"
+    value: admin
+  - action: fill
+    target: "#txtPassword"
+    value: pass1234
+  - action: click
+    target: "#btnLogin"
+  - action: wait
+    value: "500"
+  - action: assert.text
+    target: "#lblStatus"
+    value: 환영합니다
+  - action: screenshot
+    name: welcome_state

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net35;netstandard2.0;net8.0-windows</TargetFrameworks>
+    <AssemblyName>E2ETest.Core</AssemblyName>
+    <RootNamespace>E2ETest.Core</RootNamespace>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>E2ETest.Core</PackageId>
+    <Description>Playwright 스타일의 .NET WinForms/WPF E2E 테스트 프레임워크 Core API</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8618;CS8625;CS8602;CS8604</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
+    <DefineConstants>$(DefineConstants);NET35</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <DefineConstants>$(DefineConstants);NET8_PLUS;HAS_UIA;HAS_GDI</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
+    <Reference Include="System.Core" />
+  </ItemGroup>
+
+</Project>

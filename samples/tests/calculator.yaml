@@ -1,0 +1,21 @@
+name: WPF VB 계산기 더하기
+app:
+  path: ../WpfSampleVb/bin/Debug/net8.0-windows/SampleWpfVb.exe
+  startupTimeoutMs: 10000
+options:
+  defaultTimeoutMs: 5000
+  recordVideo: true
+steps:
+  - action: fill
+    target: "#txtA"
+    value: "12"
+  - action: fill
+    target: "#txtB"
+    value: "30"
+  - action: click
+    target: "#btnAdd"
+  - action: assert.text
+    target: "#lblResult"
+    value: "42"
+  - action: screenshot
+    name: result

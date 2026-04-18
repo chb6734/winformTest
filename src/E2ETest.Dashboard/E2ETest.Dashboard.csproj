@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <AssemblyName>E2ETest.Dashboard</AssemblyName>
+    <RootNamespace>E2ETest.Dashboard</RootNamespace>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\E2ETest.Core\E2ETest.Core.csproj" />
+    <ProjectReference Include="..\E2ETest.Ipc\E2ETest.Ipc.csproj" />
+  </ItemGroup>
+
+</Project>
