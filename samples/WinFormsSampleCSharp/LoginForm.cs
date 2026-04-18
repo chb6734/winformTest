@@ -30,7 +30,7 @@ public sealed class LoginForm : Form
         _login = new Button { Text = "로그인", Location = new Point(120, 110), Width = 80, Name = "btnLogin", AccessibleName = "로그인" };
         _login.Click += OnLogin;
 
-        _status = new Label { Location = new Point(30, 160), Width = 290, Height = 40, Name = "lblStatus", AccessibleName = "상태", ForeColor = Color.DarkBlue };
+        _status = new Label { Location = new Point(30, 160), Width = 290, Height = 40, Name = "lblStatus", ForeColor = Color.DarkBlue };
 
         Controls.Add(lblUser);
         Controls.Add(_user);

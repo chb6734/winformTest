@@ -11,9 +11,25 @@ namespace E2ETest.Scripting
     {
         public static TestCase Load(string yamlFilePath)
         {
-            using (var sr = new StreamReader(yamlFilePath))
+            string fullPath = Path.GetFullPath(yamlFilePath);
+            string baseDir = Path.GetDirectoryName(fullPath);
+            using (var sr = new StreamReader(fullPath))
             {
-                return LoadFromReader(sr, yamlFilePath);
+                var tc = LoadFromReader(sr, fullPath);
+                // 상대 경로를 YAML 파일 기준으로 절대 경로화
+                if (tc.App != null && !string.IsNullOrEmpty(tc.App.Path) && !Path.IsPathRooted(tc.App.Path))
+                {
+                    tc.App.Path = Path.GetFullPath(Path.Combine(baseDir, tc.App.Path));
+                }
+                if (tc.App != null && !string.IsNullOrEmpty(tc.App.WorkingDirectory) && !Path.IsPathRooted(tc.App.WorkingDirectory))
+                {
+                    tc.App.WorkingDirectory = Path.GetFullPath(Path.Combine(baseDir, tc.App.WorkingDirectory));
+                }
+                if (tc.Options != null && !string.IsNullOrEmpty(tc.Options.OutputDirectory) && !Path.IsPathRooted(tc.Options.OutputDirectory))
+                {
+                    tc.Options.OutputDirectory = Path.GetFullPath(Path.Combine(baseDir, tc.Options.OutputDirectory));
+                }
+                return tc;
             }
         }
 
