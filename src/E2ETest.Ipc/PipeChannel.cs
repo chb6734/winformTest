@@ -15,43 +15,64 @@ namespace E2ETest.Ipc
     public sealed class PipeServer : IDisposable
     {
         private readonly string _pipeName;
-        private NamedPipeServerStream _pipe;
-        private StreamReader _reader;
         public event Action<RunnerEvent> OnEvent;
+        public event Action OnClientConnected;
+        public event Action OnClientDisconnected;
+        private volatile bool _disposed;
 
         public PipeServer(string pipeName = "e2etest-pipe") { _pipeName = pipeName; }
 
+        /// <summary>
+        /// 무한 accept 루프. 클라이언트(CLI) 연결 → 이벤트 스트림 수신 → 연결 끊김 → 다음 연결 대기.
+        /// Dashboard는 여러 Re-run을 연속으로 받을 수 있음.
+        /// </summary>
         public void StartAndWait(CancellationToken ct)
         {
-            _pipe = new NamedPipeServerStream(_pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-            _pipe.WaitForConnection();
-            _reader = new StreamReader(_pipe);
-            Task.Run(() => ReadLoop(ct), ct);
-        }
-
-        private void ReadLoop(CancellationToken ct)
-        {
-            try
+            while (!ct.IsCancellationRequested && !_disposed)
             {
-                string line;
-                while (!ct.IsCancellationRequested && (line = _reader.ReadLine()) != null)
+                NamedPipeServerStream pipe = null;
+                try
                 {
-                    try
+                    pipe = new NamedPipeServerStream(_pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                    // 비동기 wait (취소 지원)
+                    var ar = pipe.BeginWaitForConnection(null, null);
+                    while (!ar.IsCompleted)
                     {
-                        var evt = JsonSerializer.Deserialize<RunnerEvent>(line);
-                        if (evt != null && OnEvent != null) OnEvent(evt);
+                        if (ct.WaitHandle.WaitOne(200)) { try { pipe.Dispose(); } catch { } return; }
                     }
-                    catch { /* bad line — skip */ }
+                    pipe.EndWaitForConnection(ar);
+
+                    if (OnClientConnected != null) OnClientConnected();
+
+                    using (var reader = new StreamReader(pipe))
+                    {
+                        string line;
+                        while (!ct.IsCancellationRequested && (line = reader.ReadLine()) != null)
+                        {
+                            try
+                            {
+                                var evt = JsonSerializer.Deserialize<RunnerEvent>(line);
+                                if (evt != null && OnEvent != null) OnEvent(evt);
+                            }
+                            catch { /* bad line — skip */ }
+                        }
+                    }
+
+                    if (OnClientDisconnected != null) OnClientDisconnected();
+                }
+                catch
+                {
+                    // 에러 시 잠시 대기 후 재시도
+                    if (ct.WaitHandle.WaitOne(500)) return;
+                }
+                finally
+                {
+                    try { if (pipe != null) pipe.Dispose(); } catch { }
                 }
             }
-            catch { /* pipe closed */ }
         }
 
-        public void Dispose()
-        {
-            try { if (_reader != null) _reader.Dispose(); } catch { }
-            try { if (_pipe != null) _pipe.Dispose(); } catch { }
-        }
+        public void Dispose() { _disposed = true; }
     }
 
     public sealed class PipeClient : IDisposable

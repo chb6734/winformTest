@@ -40,7 +40,7 @@ namespace E2ETest.Core
             result.ReportDirectory = runDir;
             string framesDir = Path.Combine(runDir, "frames");
 
-            Emit(RunnerEvent.RunStarted(testCase.Name, testCase.Steps.Count));
+            Emit(RunnerEvent.RunStarted(testCase.Name, testCase.Steps.Count, testCase.SourcePath));
             Log(LogLevel.Info, "=== Running: " + testCase.Name + " ===");
             Log(LogLevel.Info, "Output: " + runDir);
 

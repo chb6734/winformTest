@@ -62,11 +62,17 @@ namespace E2ETest.Cli
             PipeClient pipe = null;
             if (args.Flag("ui"))
             {
-                LaunchDashboard();
+                LaunchDashboard(input);
                 pipe = new PipeClient();
-                // 대시보드가 파이프 서버를 여는 동안 잠깐 대기
                 for (int i = 0; i < 30 && !pipe.TryConnect(200); i++) Thread.Sleep(200);
                 if (!pipe.Connected) Console.Error.WriteLine("WARN: dashboard connect failed; continuing without UI");
+            }
+            else if (args.Flag("ui-attach"))
+            {
+                // 이미 실행 중인 Dashboard에만 연결 (Re-run에서 사용)
+                pipe = new PipeClient();
+                for (int i = 0; i < 10 && !pipe.TryConnect(200); i++) Thread.Sleep(200);
+                if (!pipe.Connected) Console.Error.WriteLine("WARN: no dashboard listening; continuing without UI");
             }
 
             int result = RunFile(input, args, pipe);
@@ -89,11 +95,12 @@ namespace E2ETest.Cli
             int fileIdx = args.Positional[1].Equals("run", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
             if (args.Positional.Count <= fileIdx) { Console.Error.WriteLine("usage: e2e ui <file>"); return 2; }
 
-            LaunchDashboard();
+            string testFile = args.Positional[fileIdx];
+            LaunchDashboard(testFile);
             var pipe = new PipeClient();
             for (int i = 0; i < 30 && !pipe.TryConnect(200); i++) Thread.Sleep(200);
 
-            int result = RunFile(args.Positional[fileIdx], args, pipe);
+            int result = RunFile(testFile, args, pipe);
             pipe.Dispose();
             return result;
         }
@@ -168,7 +175,7 @@ namespace E2ETest.Cli
             }
         }
 
-        private static void LaunchDashboard()
+        private static void LaunchDashboard(string testFilePath)
         {
             // 기존 Dashboard 인스턴스 종료 (pipe 충돌 방지)
             try
@@ -181,6 +188,9 @@ namespace E2ETest.Cli
             catch { }
 
             string baseDir = AppContext.BaseDirectory;
+            string cliExe = Path.Combine(baseDir, "e2e.exe");
+            string absTestFile = string.IsNullOrEmpty(testFilePath) ? "" : Path.GetFullPath(testFilePath);
+
             string[] candidates =
             {
                 Path.Combine(baseDir, "E2ETest.Dashboard.exe"),
@@ -195,9 +205,14 @@ namespace E2ETest.Cli
                     {
                         var psi = new System.Diagnostics.ProcessStartInfo(c)
                         {
-                            UseShellExecute = true,  // 독립 프로세스로 기동 (부모 stdout 상속 안 함)
+                            UseShellExecute = true,
                             WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal
                         };
+                        // Re-run을 위한 CLI/테스트파일 경로 전달
+                        psi.ArgumentList.Add("--cli-exe");
+                        psi.ArgumentList.Add(cliExe);
+                        psi.ArgumentList.Add("--test-file");
+                        psi.ArgumentList.Add(absTestFile);
                         System.Diagnostics.Process.Start(psi);
                         return;
                     }

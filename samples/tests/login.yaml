@@ -9,18 +9,25 @@ options:
 steps:
   - action: screenshot
     name: initial_state
+    description: 로그인 폼 초기 화면 캡처
   - action: fill
     target: "#txtUser"
     value: admin
+    description: 사용자명 입력란에 admin 입력
   - action: fill
     target: "#txtPassword"
     value: pass1234
+    description: 비밀번호 입력 (pass1234)
   - action: click
     target: "#btnLogin"
+    description: 로그인 버튼 클릭
   - action: wait
     value: "500"
+    description: 상태 갱신 대기 500ms
   - action: assert.text
     target: "#lblStatus"
     value: 환영합니다
+    description: 상태 레이블에 "환영합니다" 문구가 표시되는지 검증
   - action: screenshot
     name: welcome_state
+    description: 로그인 성공 후 환영 화면 캡처

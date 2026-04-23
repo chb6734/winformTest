@@ -16,6 +16,7 @@ namespace E2ETest.Scripting
             using (var sr = new StreamReader(fullPath))
             {
                 var tc = LoadFromReader(sr, fullPath);
+                tc.SourcePath = fullPath;
                 // 상대 경로를 YAML 파일 기준으로 절대 경로화
                 if (tc.App != null && !string.IsNullOrEmpty(tc.App.Path) && !Path.IsPathRooted(tc.App.Path))
                 {
@@ -83,7 +84,8 @@ namespace E2ETest.Scripting
                     Action = GetString(m, "action"),
                     Target = GetString(m, "target"),
                     Value = GetString(m, "value"),
-                    Name = GetString(m, "name")
+                    Name = GetString(m, "name"),
+                    Description = GetString(m, "description")
                 };
                 var to = GetString(m, "timeoutMs");
                 if (!string.IsNullOrEmpty(to))

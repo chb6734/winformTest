@@ -10,6 +10,7 @@ namespace E2ETest.Core.Model
         public AppSpec App { get; set; }
         public List<TestStep> Steps { get; set; }
         public TestOptions Options { get; set; }
+        public string SourcePath { get; set; }  // YAML 파일 원본 경로 (Re-run용)
 
         public TestCase() { Steps = new List<TestStep>(); Options = new TestOptions(); }
     }
@@ -32,6 +33,7 @@ namespace E2ETest.Core.Model
         public string Target { get; set; }      // selector (when applicable)
         public string Value { get; set; }       // typed text, expected text, etc.
         public string Name { get; set; }        // screenshot file name, step display name
+        public string Description { get; set; } // 사람이 읽을 수 있는 스텝 설명 (대시보드 표시용)
         public int? TimeoutMs { get; set; }
 
         public Dictionary<string, string> Extras { get; set; }
@@ -40,7 +42,17 @@ namespace E2ETest.Core.Model
 
         public override string ToString()
         {
+            if (!string.IsNullOrEmpty(Description)) return Description;
             return Action + (string.IsNullOrEmpty(Target) ? "" : " " + Target) + (string.IsNullOrEmpty(Value) ? "" : " = " + Value);
+        }
+
+        /// <summary>대시보드/로그용 간결한 기술 라벨 (action + target).</summary>
+        public string TechnicalLabel
+        {
+            get
+            {
+                return Action + (string.IsNullOrEmpty(Target) ? "" : " " + Target) + (string.IsNullOrEmpty(Value) ? "" : " = " + Value);
+            }
         }
     }
 

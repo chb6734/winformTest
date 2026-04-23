@@ -11,9 +11,12 @@ namespace E2ETest.Core.Events
 
         // 범용 payload 필드 — 타입별로 다른 필드만 채워짐.
         public string TestName { get; set; }
+        public string TestSourcePath { get; set; }   // YAML 파일의 절대 경로 (Re-run용)
         public string StepAction { get; set; }
         public string StepTarget { get; set; }
+        public string StepValue { get; set; }
         public string StepName { get; set; }
+        public string StepDescription { get; set; }
         public string Status { get; set; }       // Pending/Running/Passed/Failed/Skipped
         public string Message { get; set; }
         public string ScreenshotBase64 { get; set; }
@@ -23,13 +26,13 @@ namespace E2ETest.Core.Events
         public int? TotalSteps { get; set; }
         public long? DurationMs { get; set; }
 
-        public static RunnerEvent RunStarted(string testName, int totalSteps)
+        public static RunnerEvent RunStarted(string testName, int totalSteps, string sourcePath)
         {
-            return new RunnerEvent { Type = "run.started", Timestamp = Now(), TestName = testName, TotalSteps = totalSteps };
+            return new RunnerEvent { Type = "run.started", Timestamp = Now(), TestName = testName, TotalSteps = totalSteps, TestSourcePath = sourcePath };
         }
         public static RunnerEvent StepStarted(int index, int total, TestStep step)
         {
-            return new RunnerEvent { Type = "step.started", Timestamp = Now(), StepIndex = index, TotalSteps = total, StepAction = step.Action, StepTarget = step.Target, StepName = step.Name };
+            return new RunnerEvent { Type = "step.started", Timestamp = Now(), StepIndex = index, TotalSteps = total, StepAction = step.Action, StepTarget = step.Target, StepValue = step.Value, StepName = step.Name, StepDescription = step.Description };
         }
         public static RunnerEvent StepEnded(int index, StepResult result)
         {
