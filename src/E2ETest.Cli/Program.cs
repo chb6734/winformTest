@@ -170,6 +170,16 @@ namespace E2ETest.Cli
 
         private static void LaunchDashboard()
         {
+            // 기존 Dashboard 인스턴스 종료 (pipe 충돌 방지)
+            try
+            {
+                foreach (var p in System.Diagnostics.Process.GetProcessesByName("E2ETest.Dashboard"))
+                {
+                    try { p.Kill(); p.WaitForExit(1000); } catch { }
+                }
+            }
+            catch { }
+
             string baseDir = AppContext.BaseDirectory;
             string[] candidates =
             {
@@ -181,7 +191,17 @@ namespace E2ETest.Cli
             {
                 if (File.Exists(c))
                 {
-                    try { System.Diagnostics.Process.Start(c); return; } catch { }
+                    try
+                    {
+                        var psi = new System.Diagnostics.ProcessStartInfo(c)
+                        {
+                            UseShellExecute = true,  // 독립 프로세스로 기동 (부모 stdout 상속 안 함)
+                            WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal
+                        };
+                        System.Diagnostics.Process.Start(psi);
+                        return;
+                    }
+                    catch (Exception ex) { Console.Error.WriteLine("Dashboard start failed: " + ex.Message); }
                 }
             }
             Console.Error.WriteLine("WARN: dashboard executable not found; continuing without UI");

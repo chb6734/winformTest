@@ -18,8 +18,9 @@ namespace E2ETest.Core.Recording
             }
 
             string inputPattern = Path.Combine(framesDir, "frame_%06d.png");
+            // scale filter: x264는 짝수 해상도 필요. trunc(x/2)*2로 홀수 차원 1px 잘라냄.
             var psi = new ProcessStartInfo(ffmpeg,
-                "-y -framerate " + fps + " -i \"" + inputPattern + "\" -c:v libx264 -pix_fmt yuv420p \"" + outputMp4 + "\"")
+                "-y -framerate " + fps + " -i \"" + inputPattern + "\" -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -c:v libx264 -pix_fmt yuv420p \"" + outputMp4 + "\"")
             {
                 UseShellExecute = false,
                 RedirectStandardError = true,

@@ -49,7 +49,19 @@ namespace E2ETest.Dashboard.ViewModels
         {
             _server = new PipeServer();
             _server.OnEvent += OnRunnerEvent;
-            new Thread(() => _server.StartAndWait(ct)) { IsBackground = true }.Start();
+            new Thread(() =>
+            {
+                try { _server.StartAndWait(ct); }
+                catch (Exception ex)
+                {
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        StatusText = "PIPE ERROR";
+                        AddLog("ERROR", "Pipe server failed: " + ex.Message);
+                        AddLog("ERROR", "이미 다른 대시보드 인스턴스가 실행 중일 수 있습니다. 기존 Dashboard 종료 후 재시도하세요.");
+                    });
+                }
+            }) { IsBackground = true }.Start();
             AddLog("INFO", "Dashboard ready. Waiting for runner...");
         }
 
