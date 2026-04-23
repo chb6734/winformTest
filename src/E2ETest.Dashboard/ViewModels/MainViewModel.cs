@@ -95,23 +95,46 @@ namespace E2ETest.Dashboard.ViewModels
 
         public void Rerun()
         {
-            if (!CanRerun) return;
-            // 즉시 UI 리셋 — 사용자가 클릭한 순간 이전 결과가 사라지고 초기 상태로 돌아감.
-            // 새 run.started 이벤트가 도착하기까지 수 초 걸릴 수 있으므로 여기서 미리 정리.
+            AddLog("INFO", "=== 재실행 클릭 ===");
+            AddLog("INFO", "CLI exe: " + (_cliExePath ?? "(null)"));
+            AddLog("INFO", "Test file: " + (_testFilePath ?? "(null)"));
+
+            if (string.IsNullOrEmpty(_cliExePath) || !File.Exists(_cliExePath))
+            {
+                AddLog("ERROR", "CLI exe 경로를 찾을 수 없음 → 재실행 불가");
+                return;
+            }
+            if (string.IsNullOrEmpty(_testFilePath) || !File.Exists(_testFilePath))
+            {
+                AddLog("ERROR", "Test 파일 경로를 찾을 수 없음 → 재실행 불가");
+                return;
+            }
+
             ResetForRerun();
             try
             {
-                var psi = new ProcessStartInfo(_cliExePath, "run --ui-attach \"" + _testFilePath + "\"")
+                var psi = new ProcessStartInfo
                 {
-                    UseShellExecute = true,
+                    FileName = _cliExePath,
+                    UseShellExecute = false,
+                    CreateNoWindow = false,           // 콘솔 창이 떠야 CLI 진행 상황과 에러가 보임
                     WorkingDirectory = Path.GetDirectoryName(_testFilePath)
                 };
-                Process.Start(psi);
-                AddLog("INFO", "재실행 요청됨 (CLI 기동 대기): " + _testFilePath);
+                psi.ArgumentList.Add("run");
+                psi.ArgumentList.Add("--ui-attach");
+                psi.ArgumentList.Add(_testFilePath);
+                var proc = Process.Start(psi);
+                if (proc == null)
+                {
+                    AddLog("ERROR", "Process.Start가 null 반환 (spawn 실패)");
+                    StatusText = "FAILED";
+                    return;
+                }
+                AddLog("INFO", "CLI 프로세스 시작됨 PID=" + proc.Id + ". Pipe 연결 대기 중...");
             }
             catch (Exception ex)
             {
-                AddLog("ERROR", "재실행 실패: " + ex.Message);
+                AddLog("ERROR", "재실행 실패: " + ex.GetType().Name + " — " + ex.Message);
                 StatusText = "FAILED";
             }
         }

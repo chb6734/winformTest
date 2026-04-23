@@ -244,6 +244,12 @@ namespace E2ETest.Cli
 
     internal sealed class Args
     {
+        // 값을 받지 않는 부울 플래그 (whitelist). 이 외의 --foo 는 다음 토큰을 값으로 간주.
+        private static readonly HashSet<string> BoolFlags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "ui", "ui-attach", "verbose", "help", "h", "no-record", "headless"
+        };
+
         public List<string> Positional { get; private set; }
         public Dictionary<string, string> Named { get; private set; }
         public HashSet<string> Flags { get; private set; }
@@ -261,8 +267,18 @@ namespace E2ETest.Cli
                 if (a.StartsWith("--"))
                 {
                     string key = a.Substring(2);
-                    if (i + 1 < raw.Length && !raw[i + 1].StartsWith("--")) { Named[key] = raw[++i]; }
-                    else { Flags.Add(key); }
+                    if (BoolFlags.Contains(key))
+                    {
+                        Flags.Add(key);
+                    }
+                    else if (i + 1 < raw.Length && !raw[i + 1].StartsWith("--"))
+                    {
+                        Named[key] = raw[++i];
+                    }
+                    else
+                    {
+                        Flags.Add(key);
+                    }
                     continue;
                 }
                 Positional.Add(a);
