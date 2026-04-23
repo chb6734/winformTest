@@ -69,9 +69,10 @@ namespace E2ETest.Cli
             }
             else if (args.Flag("ui-attach"))
             {
-                // 이미 실행 중인 Dashboard에만 연결 (Re-run에서 사용)
+                // 이미 실행 중인 Dashboard에만 연결 (재실행에서 사용)
                 pipe = new PipeClient();
-                for (int i = 0; i < 10 && !pipe.TryConnect(200); i++) Thread.Sleep(200);
+                // Dashboard가 이전 연결 종료 후 새 서버 인스턴스를 여는 데 약간의 시간이 필요 — 넉넉히 30회 재시도 (~6초)
+                for (int i = 0; i < 30 && !pipe.TryConnect(200); i++) Thread.Sleep(200);
                 if (!pipe.Connected) Console.Error.WriteLine("WARN: no dashboard listening; continuing without UI");
             }
 

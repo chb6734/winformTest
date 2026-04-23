@@ -1,0 +1,36 @@
+name: 실패 시연 - 중간 스텝에서 일부러 실패
+app:
+  path: ../WinFormsSampleCSharp/bin/Debug/net8.0-windows/SampleWinForms.exe
+  startupTimeoutMs: 10000
+options:
+  defaultTimeoutMs: 5000
+  recordVideo: true
+  outputDirectory: ../../out
+steps:
+  - action: screenshot
+    name: initial
+    description: 로그인 폼 초기 화면 캡처 (성공 예상)
+  - action: fill
+    target: "#txtUser"
+    value: admin
+    description: 사용자명 입력 - admin (성공 예상)
+  - action: fill
+    target: "#txtPassword"
+    value: 잘못된비밀번호
+    description: 일부러 잘못된 비밀번호 입력 (성공 예상 - 입력 자체는 됨)
+  - action: click
+    target: "#btnLogin"
+    description: 로그인 버튼 클릭 (성공 예상)
+  - action: wait
+    value: "500"
+    description: 상태 갱신 대기 500ms (성공 예상)
+  - action: assert.text
+    target: "#lblStatus"
+    value: 환영합니다
+    description: ⚠️ 의도적 실패 - 실제로는 "로그인 실패" 메시지가 뜨는데 "환영합니다"를 기대
+  - action: screenshot
+    name: never_reached
+    description: 이 스텝은 실행되지 않음 (이전 실패로 중단)
+  - action: click
+    target: "#btnNonexistent"
+    description: 이것도 실행 안 됨

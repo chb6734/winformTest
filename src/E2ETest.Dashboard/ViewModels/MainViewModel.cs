@@ -96,6 +96,9 @@ namespace E2ETest.Dashboard.ViewModels
         public void Rerun()
         {
             if (!CanRerun) return;
+            // 즉시 UI 리셋 — 사용자가 클릭한 순간 이전 결과가 사라지고 초기 상태로 돌아감.
+            // 새 run.started 이벤트가 도착하기까지 수 초 걸릴 수 있으므로 여기서 미리 정리.
+            ResetForRerun();
             try
             {
                 var psi = new ProcessStartInfo(_cliExePath, "run --ui-attach \"" + _testFilePath + "\"")
@@ -104,12 +107,23 @@ namespace E2ETest.Dashboard.ViewModels
                     WorkingDirectory = Path.GetDirectoryName(_testFilePath)
                 };
                 Process.Start(psi);
-                AddLog("INFO", "Re-run 요청됨: " + _testFilePath);
+                AddLog("INFO", "재실행 요청됨 (CLI 기동 대기): " + _testFilePath);
             }
             catch (Exception ex)
             {
-                AddLog("ERROR", "Re-run 실패: " + ex.Message);
+                AddLog("ERROR", "재실행 실패: " + ex.Message);
+                StatusText = "FAILED";
             }
+        }
+
+        private void ResetForRerun()
+        {
+            Steps.Clear();
+            ScreenshotImage = null;
+            PreviewCaption = "재실행 중 — CLI 연결 대기...";
+            ProgressText = "";
+            StatusText = "RUNNING";
+            OnChanged(nameof(CanRerun));
         }
 
         public void SelectStep(StepVm step)
@@ -172,8 +186,8 @@ namespace E2ETest.Dashboard.ViewModels
                         if (evt.StepIndex.HasValue && evt.StepIndex.Value < Steps.Count)
                         {
                             var vm = Steps[evt.StepIndex.Value];
-                            if (evt.Status == "Passed") { vm.Icon = "✓"; vm.ColorBrush = Brushes.LightGreen; vm.StatusText = "Passed"; }
-                            else if (evt.Status == "Failed") { vm.Icon = "✗"; vm.ColorBrush = Brushes.IndianRed; vm.StatusText = "Failed"; vm.TechnicalLabel += " — " + evt.Message; }
+                            if (evt.Status == "Passed") { vm.Icon = "✓"; vm.ColorBrush = Brushes.LightGreen; vm.StatusText = "통과"; }
+                            else if (evt.Status == "Failed") { vm.Icon = "✗"; vm.ColorBrush = Brushes.IndianRed; vm.StatusText = "실패"; vm.ErrorMessage = evt.Message; }
                             vm.DurationLabel = evt.DurationMs.HasValue ? (evt.DurationMs.Value + " ms") : "";
                             vm.ScreenshotPath = evt.ScreenshotPath;
                             vm.NotifyChanged();
@@ -181,12 +195,38 @@ namespace E2ETest.Dashboard.ViewModels
                             if (!string.IsNullOrEmpty(evt.ScreenshotPath) && File.Exists(evt.ScreenshotPath))
                             {
                                 ScreenshotImage = LoadImage(evt.ScreenshotPath);
-                                PreviewCaption = "최근: 스텝 " + (evt.StepIndex + 1) + " " + vm.StatusText;
+                                PreviewCaption = "최근: 스텝 " + (evt.StepIndex + 1) + " " + vm.StatusText
+                                    + (evt.Status == "Failed" && !string.IsNullOrEmpty(evt.Message) ? " — " + evt.Message : "");
                             }
                             if (!string.IsNullOrEmpty(evt.ScreenshotPath))
                             {
                                 LastRunDirectory = Path.GetDirectoryName(Path.GetDirectoryName(evt.ScreenshotPath));
                                 OnChanged(nameof(HasRunResult));
+                            }
+
+                            // 실패 이후 남은 스텝들은 '미실행' 상태로 회색 표시
+                            if (evt.Status == "Failed")
+                            {
+                                for (int i = evt.StepIndex.Value + 1; i < _total && i < Steps.Count; i++)
+                                {
+                                    Steps[i].Icon = "–";
+                                    Steps[i].ColorBrush = Brushes.DimGray;
+                                    Steps[i].StatusText = "미실행";
+                                    Steps[i].NotifyChanged();
+                                }
+                                // Runner는 실패 시 뒷 스텝을 안 보내므로 Steps에 없는 나머지도 placeholder로 추가
+                                for (int i = Steps.Count; i < _total; i++)
+                                {
+                                    Steps.Add(new StepVm
+                                    {
+                                        Index = i,
+                                        Description = "(이전 실패로 미실행)",
+                                        TechnicalLabel = "",
+                                        Icon = "–",
+                                        ColorBrush = Brushes.DimGray,
+                                        StatusText = "미실행"
+                                    });
+                                }
                             }
                         }
                         break;
@@ -274,9 +314,12 @@ namespace E2ETest.Dashboard.ViewModels
         public string TechnicalLabel { get; set; }
         public string Icon { get; set; }
         public Brush ColorBrush { get; set; }
-        public string StatusText { get; set; } = "Pending";
+        public string StatusText { get; set; } = "대기";
         public string DurationLabel { get; set; } = "";
         public string ScreenshotPath { get; set; }
+        public string ErrorMessage { get; set; }
+
+        public bool HasError { get { return !string.IsNullOrEmpty(ErrorMessage); } }
 
         private bool _isSelected;
         public bool IsSelected
@@ -293,7 +336,7 @@ namespace E2ETest.Dashboard.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyChanged()
         {
-            foreach (var name in new[] { "Description", "TechnicalLabel", "Icon", "ColorBrush", "StatusText", "DurationLabel", "ScreenshotPath", "IsSelected", "RowBackground" })
+            foreach (var name in new[] { "Description", "TechnicalLabel", "Icon", "ColorBrush", "StatusText", "DurationLabel", "ScreenshotPath", "ErrorMessage", "HasError", "IsSelected", "RowBackground" })
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
             }
